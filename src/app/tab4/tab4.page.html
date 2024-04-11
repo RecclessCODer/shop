@@ -1,0 +1,37 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>用户登录</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-card class="ion-padding">
+    <ion-item>
+      <ion-label class="ion-text-nowrap">用户名：</ion-label>
+      <ion-input type="text" [(ngModel)]="userName"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label class="ion-text-nowrap">
+        密&nbsp;&nbsp;&nbsp;&nbsp;码：
+      </ion-label>
+      <ion-input type="password" [(ngModel)]="userPwd"></ion-input>
+    </ion-item>
+  </ion-card>
+
+  <ion-button (click)="login()" expand="block"> 登录 </ion-button>
+
+  <h5>其他登录方式：</h5>
+  <ion-button fill="clear" shape="round">
+    <ion-icon name="logo-angular"></ion-icon>
+  </ion-button>
+  <ion-button fill="clear" shape="round">
+    <ion-icon name="logo-apple"></ion-icon>
+  </ion-button>
+  <ion-button fill="clear" shape="round">
+    <ion-icon name="logo-github"></ion-icon>
+  </ion-button>
+  <ion-button fill="clear" shape="round">
+    <ion-icon name="logo-tux"></ion-icon>
+  </ion-button>
+</ion-content>

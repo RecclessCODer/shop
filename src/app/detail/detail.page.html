@@ -1,0 +1,56 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>商品详情</ion-title>
+    <ion-button fill="clear" slot="end">
+      <ion-icon name="cart" color="dark"></ion-icon>
+    </ion-button>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding" *ngIf="res">
+  <ion-item>
+    <ion-label>产品型号:{{res.details.title}}</ion-label>
+  </ion-item>
+
+  <swiper-container
+    pagination="true"
+    pagination-clickable="true"
+    navigation="true"
+    space-between="30"
+    centered-slides="true"
+    autoplay-delay="2500"
+    autoplay-disable-on-interaction="false"
+    loop="true"
+  >
+    <swiper-slide *ngFor="let item of res.details.picList">
+      <img [src]="item.picURL" alt="" />
+    </swiper-slide>
+  </swiper-container>
+
+  <ion-card style="margin: 0px; padding: 0px">
+    <ion-card-header *ngIf="res.details">
+      <ion-card-title>{{res.details.title}}</ion-card-title>
+      <ion-card-subtitle>{{res.details.subtitle}}</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label style="font-size: xx-large; color: red">
+          ¥ {{res.details.price}}
+        </ion-label>
+        <ion-button size="default" color="danger" slot="end">
+          <ion-icon slot="start" name="cart"></ion-icon>
+          添加到购物车
+        </ion-button>
+      </ion-item>
+      <ion-item>
+        <ion-label>商品名称：{{res.details.lname}}</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>商品价格：¥{{res.details.price}}/一次</ion-label>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+</ion-content>
