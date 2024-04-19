@@ -1,22 +1,61 @@
-# Node.js with Angular
-# Build a Node.js project that uses Angular.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+parameters:
+- name: os
+  displayName: Platform
+  type: string
+  default: ios
+  values:
+  - ios
+  - android
+- name: env
+  displayName: Environment
+  type: string
+  default: sit
+  values:
+  - sit
+  - stg
+  - prd
+- name: exportMethod
+  displayName: 【※iOSのみの設定】Export Method（adhocは「Firebase App Distribution」、appstoreは「TestFlight」で配信する）
+  type: string
+  default: adhoc
+  values:
+  - adhoc
+  - appstore
+- name: appVersion
+  displayName: アプリバージョン 例.）3.2.0
+  type: string
+- name: buildNumber
+  displayName: ビルド番号 例.）380
+  type: string
+- name: releaseNotes
+  displayName: リリースノート 例.）v3.2.0検証用
+  type: string
 
 trigger:
-- main
+- none
 
-pool:
-  vmImage: ubuntu-latest
+jobs:
+- job:
+  ${{ if eq(parameters.os, 'ios') }}:
+    timeoutInMinutes: 120
+  pool:
+    vmImage: macos-12
+  variables:
+  - ${{ if eq(parameters.os, 'ios') }}:
+    - group: iOS
+  steps:
+  - template: build-info-manager-template.yml
+    parameters:
+      env: ${{ parameters.env }}
+      appVersion: ${{ parameters.appVersion }}
+      buildNumber: ${{ parameters.buildNumber }}
+      releaseNotes: ${{ parameters.releaseNotes }}
 
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '20.x'
-  displayName: 'Install Node.js'
-
-- script: |
-    npm install -g @angular/cli
-    npm install
-    ng build --configuration production
-  displayName: 'npm install and build'
+  - template: ${{ parameters.os }}-template.yml
+    parameters:
+      env: ${{ parameters.env }}
+      ${{ if eq(parameters.os, 'ios') }}:
+        exportMethod: ${{ parameters.exportMethod }}
+      appVersion: ${{ parameters.appVersion }}
+      buildNumber: $(TempBuildNumberStep.number)
+      releaseNotes: ${{ parameters.releaseNotes }}
