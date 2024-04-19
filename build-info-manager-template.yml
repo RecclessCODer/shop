@@ -1,0 +1,32 @@
+parameters:
+- name: env
+  type: string
+  default: sit
+- name: appVersion
+  type: string
+  default: ""
+- name: buildNumber
+  type: string
+  default: 0
+- name: releaseNotes
+  type: string
+  default: ""
+
+steps:
+- script: echo '${{ parameters.releaseNotes }}' > $(Build.SourcesDirectory)/release_notes.txt
+  displayName: 'Create release notes file'
+- task: DownloadSecureFile@1
+  name: appStoreApiAuthKey
+  displayName: 'Download API Auth Key'
+  inputs:
+    secureFile: 'AppStoreConnectAPI_AuthKey_AS42W3NFNX.p8'
+- task: UseRubyVersion@0
+  inputs:
+    versionSpec: '3.0'
+- script: bundle install --path ./vendor/bundle
+  displayName: 'Bundle vendor install'
+- script: bundle exec fastlane create_build_info api_key_path:$(appStoreApiAuthKey.secureFilePath) env:${{ parameters.env }} app_version:${{ parameters.appVersion }} build_number:${{ parameters.buildNumber }} ci_build_id:$(Build.BuildId)
+  displayName: 'Create build infomation to Google Spreadsheet'
+- script: echo "##vso[task.setvariable variable=number;isOutput=true]$(sed -n 2P $(Build.SourcesDirectory)/temp_build_number.txt)"
+  name: TempBuildNumberStep
+  displayName: 'Get build number from temp_build_number.txt'
