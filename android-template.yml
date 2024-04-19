@@ -1,0 +1,79 @@
+parameters:
+- name: env
+  type: string
+  default: sit
+- name: buildType
+  type: string
+  default: release
+- name: appVersion
+  type: string
+  default: ""
+- name: buildNumber
+  type: string
+  default: 0
+- name: releaseNotes
+  type: string
+  default: ""
+
+steps:
+- task: JavaToolInstaller@0
+  inputs:
+    versionSpec: '11'
+    jdkArchitectureOption: 'x64'
+    jdkSourceOption: 'PreInstalled'
+
+# 右記の指定方法は動作が不安定で、期待通りのバージョンにならないときがあるため使用しない: versionSpec: '>=18.18.0'
+# https://github.com/microsoft/azure-pipelines-tasks/issues/18280
+- task: NodeTool@0
+  inputs:
+    versionSpec: 18.x
+
+- task: DownloadSecureFile@1
+  name: apiAuthKey
+  displayName: 'Download API Auth Key'
+  inputs:
+    ${{ if eq(parameters.env, 'prd') }}:
+      secureFile: 'GooglePlayDeveloperAPI_pc-api-7868448597185638163-186-c43f799cbf9f.json'
+    ${{ else }}:
+      secureFile: 'firebase-app-distribution_${{ parameters.env }}_auth_key.json'
+
+- script: npm i -g  @ionic/cli@6.20.9 cordova@11.1.0
+  displayName: 'Install Ionic CLI'
+
+- script: |
+    ls $ANDROID_HOME/build-tools
+    mv $ANDROID_HOME/build-tools/33.0.2/d8 $ANDROID_HOME/build-tools/33.0.2/dx
+    mv $ANDROID_HOME/build-tools/33.0.2/lib/d8.jar $ANDROID_HOME/build-tools/33.0.2/lib/dx.jar
+  displayName: 'Rename from d8 to dx'
+
+# because of node gyp err, downgrade python version.
+# refs: https://stackoverflow.com/questions/74715990/node-gyp-err-invalid-mode-ru-while-trying-to-load-binding-gyp
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.10'
+  displayName: 'downgrade python version from 3.11 to 3.10'
+
+- task: UseRubyVersion@0
+  inputs:
+    versionSpec: '3.0'
+
+- script: bundle install --path ./vendor/bundle
+  displayName: 'Bundle vendor install'
+
+- script: |
+    set -x
+    node -v
+    npm -v
+    ionic -v
+    python --version
+    python3 --version
+    ruby -v
+    gem -v
+    bundle -v
+  displayName: 'Print Software versions'
+
+- script: echo '${{ parameters.releaseNotes }}' > $(Build.SourcesDirectory)/release_notes.txt
+  displayName: 'Create release notes file'
+
+- script: npm run android:${{ parameters.env }}:${{ parameters.buildType }} --api_key_path='$(apiAuthKey.secureFilePath)' --app_version='${{ parameters.appVersion }}' --build_number='${{ parameters.buildNumber }}' --ci_build_id='$(Build.BuildId)'
+  displayName: 'android ${{ parameters.buildType }} build'
